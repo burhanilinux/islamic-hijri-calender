@@ -1,5 +1,4 @@
 # Islamic Hijri Calendar
-Islamic Hijri Calender
 
 A lightweight, static Hijri calendar web app that renders the current Gregorian
 month with Hijri dates using the browser's Islamic calendar locale.

@@ -20,66 +20,17 @@
         </div>
       </header>
 
-      <section class="controls">
-        <button class="controls__button" id="prevMonth" type="button">◀ Prev</button>
-        <div class="controls__group">
-          <label class="controls__label" for="monthSelect">Month</label>
-          <select class="controls__select" id="monthSelect"></select>
-        </div>
-        <div class="controls__group">
-          <label class="controls__label" for="yearSelect">Year</label>
-          <select class="controls__select" id="yearSelect"></select>
-        </div>
-        <button class="controls__button" id="nextMonth" type="button">Next ▶</button>
+      <section class="calendar">
+        <div class="calendar__weekday">Sun</div>
+        <div class="calendar__weekday">Mon</div>
+        <div class="calendar__weekday">Tue</div>
+        <div class="calendar__weekday">Wed</div>
+        <div class="calendar__weekday">Thu</div>
+        <div class="calendar__weekday">Fri</div>
+        <div class="calendar__weekday">Sat</div>
       </section>
 
-      <div class="layout">
-        <div>
-          <section class="calendar">
-            <div class="calendar__weekday">Sun</div>
-            <div class="calendar__weekday">Mon</div>
-            <div class="calendar__weekday">Tue</div>
-            <div class="calendar__weekday">Wed</div>
-            <div class="calendar__weekday">Thu</div>
-            <div class="calendar__weekday">Fri</div>
-            <div class="calendar__weekday">Sat</div>
-          </section>
-
-          <section class="calendar__grid" id="calendarGrid"></section>
-        </div>
-
-        <aside class="sidebar">
-          <div class="sidebar__card">
-            <h2 class="sidebar__title">Selected day</h2>
-            <p class="sidebar__date" id="selectedDate">Pick a date</p>
-            <label class="sidebar__label" for="noteInput">Short note</label>
-            <textarea
-              class="sidebar__textarea"
-              id="noteInput"
-              rows="4"
-              placeholder="Add a short note for this day..."
-            ></textarea>
-            <button class="sidebar__button" id="saveNote" type="button">Save note</button>
-          </div>
-
-          <div class="sidebar__card">
-            <h2 class="sidebar__title">Reminders</h2>
-            <form class="reminder" id="reminderForm">
-              <input
-                class="reminder__input"
-                id="reminderText"
-                type="text"
-                maxlength="80"
-                placeholder="e.g. Pay charity"
-                required
-              />
-              <input class="reminder__time" id="reminderTime" type="time" />
-              <button class="sidebar__button" type="submit">Add reminder</button>
-            </form>
-            <ul class="reminder__list" id="reminderList"></ul>
-          </div>
-        </aside>
-      </div>
+      <section class="calendar__grid" id="calendarGrid"></section>
 
       <footer class="app__footer">
         <p>Hijri dates are calculated using the Islamic calendar locale in your browser.</p>
