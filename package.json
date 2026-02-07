@@ -1,0 +1,34 @@
+{
+  "name": "islamic-hijri-calendar",
+  "version": "1.0.0",
+  "description": "Hijri calendar desktop app",
+  "main": "main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^30.0.9",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.hijri.calendar",
+    "productName": "Hijri Calendar",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "main.js"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  }
+}
