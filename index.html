@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hijri Calendar</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app__header">
+        <div>
+          <p class="app__eyebrow">Islamic Hijri Calendar</p>
+          <h1 class="app__title" id="monthTitle">Hijri Calendar</h1>
+        </div>
+        <div class="app__today" id="todayCard">
+          <span class="app__today-label">Today in Hijri</span>
+          <span class="app__today-date" id="todayHijri">--</span>
+          <span class="app__today-gregorian" id="todayGregorian">--</span>
+        </div>
+      </header>
+
+      <section class="controls">
+        <button class="controls__button" id="prevMonth" type="button">◀ Prev</button>
+        <div class="controls__group">
+          <label class="controls__label" for="monthSelect">Month</label>
+          <select class="controls__select" id="monthSelect"></select>
+        </div>
+        <div class="controls__group">
+          <label class="controls__label" for="yearSelect">Year</label>
+          <select class="controls__select" id="yearSelect"></select>
+        </div>
+        <button class="controls__button" id="nextMonth" type="button">Next ▶</button>
+      </section>
+
+      <div class="layout">
+        <div>
+          <section class="calendar">
+            <div class="calendar__weekday">Sun</div>
+            <div class="calendar__weekday">Mon</div>
+            <div class="calendar__weekday">Tue</div>
+            <div class="calendar__weekday">Wed</div>
+            <div class="calendar__weekday">Thu</div>
+            <div class="calendar__weekday">Fri</div>
+            <div class="calendar__weekday">Sat</div>
+          </section>
+
+          <section class="calendar__grid" id="calendarGrid"></section>
+        </div>
+
+        <aside class="sidebar">
+          <div class="sidebar__card">
+            <h2 class="sidebar__title">Selected day</h2>
+            <p class="sidebar__date" id="selectedDate">Pick a date</p>
+            <label class="sidebar__label" for="noteInput">Short note</label>
+            <textarea
+              class="sidebar__textarea"
+              id="noteInput"
+              rows="4"
+              placeholder="Add a short note for this day..."
+            ></textarea>
+            <button class="sidebar__button" id="saveNote" type="button">Save note</button>
+          </div>
+
+          <div class="sidebar__card">
+            <h2 class="sidebar__title">Reminders</h2>
+            <form class="reminder" id="reminderForm">
+              <input
+                class="reminder__input"
+                id="reminderText"
+                type="text"
+                maxlength="80"
+                placeholder="e.g. Pay charity"
+                required
+              />
+              <input class="reminder__time" id="reminderTime" type="time" />
+              <button class="sidebar__button" type="submit">Add reminder</button>
+            </form>
+            <ul class="reminder__list" id="reminderList"></ul>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="app__footer">
+        <p>Hijri dates are calculated using the Islamic calendar locale in your browser.</p>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
