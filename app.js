@@ -20,7 +20,16 @@ const monthTitle = document.getElementById("monthTitle");
 const todayHijri = document.getElementById("todayHijri");
 const todayGregorian = document.getElementById("todayGregorian");
 const calendarGrid = document.getElementById("calendarGrid");
+const reminderModal = document.getElementById("reminderModal");
+const reminderModalTitle = document.getElementById("reminderModalTitle");
+const reminderModalSubtitle = document.getElementById("reminderModalSubtitle");
+const reminderInput = document.getElementById("reminderInput");
+const reminderModalError = document.getElementById("reminderModalError");
+const reminderSave = document.getElementById("reminderSave");
+const reminderDelete = document.getElementById("reminderDelete");
+const reminderCloseButtons = reminderModal.querySelectorAll("[data-reminder-close]");
 const remindersKey = "hijri-reminders-v1";
+let activeReminderContext = null;
 
 const loadReminders = () => {
   const stored = localStorage.getItem(remindersKey);
@@ -34,6 +43,8 @@ const loadReminders = () => {
     return {};
   }
 };
+
+let reminders = loadReminders();
 
 const saveReminders = (reminders) => {
   localStorage.setItem(remindersKey, JSON.stringify(reminders));
@@ -59,7 +70,7 @@ const formatHijriParts = (date) => {
   };
 };
 
-const updateReminderList = (list, reminders) => {
+const updateReminderList = (list, reminders, onEdit) => {
   list.innerHTML = "";
   if (!reminders || reminders.length === 0) {
     const empty = document.createElement("span");
@@ -69,16 +80,42 @@ const updateReminderList = (list, reminders) => {
     return;
   }
 
-  reminders.forEach((reminder) => {
-    const item = document.createElement("span");
-    item.className = "calendar__reminder";
+  reminders.forEach((reminder, index) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "calendar__reminder-button";
     item.textContent = reminder;
+    item.addEventListener("click", (event) => {
+      event.stopPropagation();
+      onEdit(reminder, index);
+    });
     list.appendChild(item);
   });
 };
 
+const openReminderModal = (context) => {
+  activeReminderContext = context;
+  reminderModalError.textContent = "";
+  reminderModalTitle.textContent = context.index === null ? "New reminder" : "Edit reminder";
+  reminderModalSubtitle.textContent = context.subtitle;
+  reminderInput.value = context.text;
+  reminderDelete.style.display = context.index === null ? "none" : "inline-flex";
+  reminderModal.classList.add("is-visible");
+  reminderModal.setAttribute("aria-hidden", "false");
+  reminderInput.focus();
+};
+
+const closeReminderModal = () => {
+  reminderModal.classList.remove("is-visible");
+  reminderModal.setAttribute("aria-hidden", "true");
+  activeReminderContext = null;
+};
+
+const showReminderError = (message) => {
+  reminderModalError.textContent = message;
+};
+
 const buildCalendar = () => {
-  const reminders = loadReminders();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
@@ -133,25 +170,28 @@ const buildCalendar = () => {
 
     const remindersList = document.createElement("div");
     remindersList.className = "calendar__reminders";
-    updateReminderList(remindersList, reminders[dateKey]);
+    const refreshList = () => {
+      updateReminderList(remindersList, reminders[dateKey], (text, index) => {
+        openReminderModal({
+          dateKey,
+          index,
+          text,
+          subtitle: `Editing reminder for ${gregorianFormatter.format(date)}`,
+          onRefresh: refreshList,
+        });
+      });
+    };
+
+    refreshList();
 
     const addReminder = () => {
-      const reminder = window.prompt(
-        `Add reminder for ${gregorianFormatter.format(date)}`,
-        ""
-      );
-      if (!reminder) {
-        return;
-      }
-      const trimmed = reminder.trim();
-      if (!trimmed) {
-        return;
-      }
-      const nextReminders = reminders[dateKey] ? [...reminders[dateKey]] : [];
-      nextReminders.push(trimmed);
-      reminders[dateKey] = nextReminders;
-      saveReminders(reminders);
-      updateReminderList(remindersList, nextReminders);
+      openReminderModal({
+        dateKey,
+        index: null,
+        text: "",
+        subtitle: `Add reminder for ${gregorianFormatter.format(date)}`,
+        onRefresh: refreshList,
+      });
     };
 
     cell.addEventListener("click", addReminder);
@@ -164,7 +204,57 @@ const buildCalendar = () => {
 
     cell.append(monthLabel, hijriDay, gregorianDay, remindersList);
     calendarGrid.appendChild(cell);
+
   }
 };
+
+reminderCloseButtons.forEach((button) => {
+  button.addEventListener("click", closeReminderModal);
+});
+
+reminderSave.addEventListener("click", () => {
+  if (!activeReminderContext) {
+    return;
+  }
+  const trimmed = reminderInput.value.trim();
+  if (!trimmed) {
+    showReminderError("Please add reminder details before saving.");
+    return;
+  }
+  const { dateKey, index, onRefresh } = activeReminderContext;
+  const currentReminders = reminders[dateKey] ? [...reminders[dateKey]] : [];
+  if (index === null) {
+    currentReminders.push(trimmed);
+  } else {
+    currentReminders[index] = trimmed;
+  }
+  reminders[dateKey] = currentReminders;
+  saveReminders(reminders);
+  onRefresh?.();
+  closeReminderModal();
+});
+
+reminderDelete.addEventListener("click", () => {
+  if (!activeReminderContext || activeReminderContext.index === null) {
+    return;
+  }
+  const { dateKey, index, onRefresh } = activeReminderContext;
+  const currentReminders = reminders[dateKey] ? [...reminders[dateKey]] : [];
+  currentReminders.splice(index, 1);
+  if (currentReminders.length === 0) {
+    delete reminders[dateKey];
+  } else {
+    reminders[dateKey] = currentReminders;
+  }
+  saveReminders(reminders);
+  onRefresh?.();
+  closeReminderModal();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && reminderModal.classList.contains("is-visible")) {
+    closeReminderModal();
+  }
+});
 
 buildCalendar();

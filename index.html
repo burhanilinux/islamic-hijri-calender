@@ -37,6 +37,50 @@
       </footer>
     </div>
 
+    <div class="reminder-modal" id="reminderModal" aria-hidden="true">
+      <div class="reminder-modal__backdrop" data-reminder-close></div>
+      <div
+        class="reminder-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reminderModalTitle"
+      >
+        <div class="reminder-modal__header">
+          <h2 id="reminderModalTitle">Reminder</h2>
+          <button
+            class="reminder-modal__icon-button"
+            type="button"
+            aria-label="Close reminder editor"
+            data-reminder-close
+          >
+            ✕
+          </button>
+        </div>
+        <p class="reminder-modal__subtitle" id="reminderModalSubtitle"></p>
+        <label class="reminder-modal__label" for="reminderInput">Reminder details</label>
+        <textarea
+          id="reminderInput"
+          class="reminder-modal__input"
+          rows="4"
+          placeholder="Add your reminder..."
+        ></textarea>
+        <p class="reminder-modal__error" id="reminderModalError" aria-live="polite"></p>
+        <div class="reminder-modal__actions">
+          <button class="reminder-modal__delete" type="button" id="reminderDelete">
+            Delete reminder
+          </button>
+          <div class="reminder-modal__actions-right">
+            <button class="reminder-modal__button" type="button" data-reminder-close>
+              Cancel
+            </button>
+            <button class="reminder-modal__button reminder-modal__button--primary" type="button" id="reminderSave">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="app.js"></script>
   </body>
 </html>
