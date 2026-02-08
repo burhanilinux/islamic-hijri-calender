@@ -108,6 +108,22 @@ body {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  gap: 6px;
+}
+
+.calendar__cell--interactive {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calendar__cell--interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.1);
+}
+
+.calendar__cell--interactive:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.35);
+  outline-offset: 2px;
 }
 
 .calendar__cell--empty {
@@ -132,6 +148,28 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent);
+}
+
+.calendar__reminders {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.calendar__reminder {
+  background: rgba(15, 118, 110, 0.08);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.calendar__reminder-empty {
+  font-style: italic;
+  color: var(--muted);
 }
 
 .calendar__cell--today {

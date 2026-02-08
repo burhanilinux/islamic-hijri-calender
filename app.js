@@ -20,6 +20,31 @@ const monthTitle = document.getElementById("monthTitle");
 const todayHijri = document.getElementById("todayHijri");
 const todayGregorian = document.getElementById("todayGregorian");
 const calendarGrid = document.getElementById("calendarGrid");
+const remindersKey = "hijri-reminders-v1";
+
+const loadReminders = () => {
+  const stored = localStorage.getItem(remindersKey);
+  if (!stored) {
+    return {};
+  }
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error("Failed to parse reminders", error);
+    return {};
+  }
+};
+
+const saveReminders = (reminders) => {
+  localStorage.setItem(remindersKey, JSON.stringify(reminders));
+};
+
+const toDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const formatHijriParts = (date) => {
   const parts = hijriFormatter.formatToParts(date);
@@ -34,7 +59,26 @@ const formatHijriParts = (date) => {
   };
 };
 
+const updateReminderList = (list, reminders) => {
+  list.innerHTML = "";
+  if (!reminders || reminders.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "calendar__reminder-empty";
+    empty.textContent = "No reminders yet";
+    list.appendChild(empty);
+    return;
+  }
+
+  reminders.forEach((reminder) => {
+    const item = document.createElement("span");
+    item.className = "calendar__reminder";
+    item.textContent = reminder;
+    list.appendChild(item);
+  });
+};
+
 const buildCalendar = () => {
+  const reminders = loadReminders();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
@@ -60,9 +104,16 @@ const buildCalendar = () => {
   for (let day = 1; day <= totalDays; day += 1) {
     const date = new Date(currentYear, currentMonth, day);
     const hijriParts = formatHijriParts(date);
+    const dateKey = toDateKey(date);
 
     const cell = document.createElement("div");
-    cell.className = "calendar__cell";
+    cell.className = "calendar__cell calendar__cell--interactive";
+    cell.setAttribute("role", "button");
+    cell.setAttribute("tabindex", "0");
+    cell.setAttribute(
+      "aria-label",
+      `Add reminder for ${gregorianFormatter.format(date)}`
+    );
 
     if (date.toDateString() === today.toDateString()) {
       cell.classList.add("calendar__cell--today");
@@ -80,7 +131,38 @@ const buildCalendar = () => {
     gregorianDay.className = "calendar__gregorian";
     gregorianDay.textContent = gregorianFormatter.format(date);
 
-    cell.append(monthLabel, hijriDay, gregorianDay);
+    const remindersList = document.createElement("div");
+    remindersList.className = "calendar__reminders";
+    updateReminderList(remindersList, reminders[dateKey]);
+
+    const addReminder = () => {
+      const reminder = window.prompt(
+        `Add reminder for ${gregorianFormatter.format(date)}`,
+        ""
+      );
+      if (!reminder) {
+        return;
+      }
+      const trimmed = reminder.trim();
+      if (!trimmed) {
+        return;
+      }
+      const nextReminders = reminders[dateKey] ? [...reminders[dateKey]] : [];
+      nextReminders.push(trimmed);
+      reminders[dateKey] = nextReminders;
+      saveReminders(reminders);
+      updateReminderList(remindersList, nextReminders);
+    };
+
+    cell.addEventListener("click", addReminder);
+    cell.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        addReminder();
+      }
+    });
+
+    cell.append(monthLabel, hijriDay, gregorianDay, remindersList);
     calendarGrid.appendChild(cell);
   }
 };
