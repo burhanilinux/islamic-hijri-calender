@@ -12,6 +12,32 @@
         <div>
           <p class="app__eyebrow">Islamic Hijri Calendar</p>
           <h1 class="app__title" id="monthTitle">Hijri Calendar</h1>
+          <div class="app__controls">
+            <button class="app__nav-button" type="button" id="prevMonth">← Previous</button>
+            <button class="app__nav-button" type="button" id="nextMonth">Next →</button>
+            <div class="app__toggle-group" role="group" aria-label="Primary date display">
+              <span class="app__toggle-label">Primary date</span>
+              <button class="app__toggle-button is-active" type="button" data-primary-date="hijri">
+                Hijri
+              </button>
+              <button class="app__toggle-button" type="button" data-primary-date="gregorian">
+                Gregorian
+              </button>
+            </div>
+            <div class="app__shortcut-wrapper">
+              <button class="app__shortcut-button" type="button" id="shortcutHelp">
+                ?
+              </button>
+              <div class="app__shortcut-popover" id="shortcutPopover" role="status">
+                <strong>Shortcuts</strong>
+                <ul>
+                  <li>Enter/Space: open reminder</li>
+                  <li>Esc: close editor</li>
+                  <li>Ctrl/Cmd + Enter: save reminder</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="app__today" id="todayCard">
           <span class="app__today-label">Today in Hijri</span>
@@ -20,22 +46,149 @@
         </div>
       </header>
 
-      <section class="calendar">
-        <div class="calendar__weekday">Sun</div>
-        <div class="calendar__weekday">Mon</div>
-        <div class="calendar__weekday">Tue</div>
-        <div class="calendar__weekday">Wed</div>
-        <div class="calendar__weekday">Thu</div>
-        <div class="calendar__weekday">Fri</div>
-        <div class="calendar__weekday">Sat</div>
-      </section>
+      <div class="app__layout">
+        <div>
+          <section class="calendar">
+            <div class="calendar__weekday">Sun</div>
+            <div class="calendar__weekday">Mon</div>
+            <div class="calendar__weekday">Tue</div>
+            <div class="calendar__weekday">Wed</div>
+            <div class="calendar__weekday">Thu</div>
+            <div class="calendar__weekday">Fri</div>
+            <div class="calendar__weekday">Sat</div>
+          </section>
 
-      <section class="calendar__grid" id="calendarGrid"></section>
+          <section class="calendar__grid" id="calendarGrid"></section>
+        </div>
+
+        <aside class="reminder-panel" aria-label="Reminder list">
+          <div class="reminder-panel__header">
+            <h2>Reminders</h2>
+            <p class="reminder-panel__subtitle">Search, filter, and jump to dates.</p>
+          </div>
+          <div class="reminder-panel__controls">
+            <input
+              type="search"
+              class="reminder-panel__search"
+              id="reminderSearch"
+              placeholder="Search reminders"
+            />
+            <select class="reminder-panel__filter" id="reminderFilter">
+              <option value="all">All reminders</option>
+              <option value="upcoming">Upcoming 30 days</option>
+              <option value="month">This month</option>
+              <option value="past">Past reminders</option>
+            </select>
+          </div>
+          <div class="reminder-panel__list" id="reminderList"></div>
+          <div class="reminder-panel__tools">
+            <h3>Data tools</h3>
+            <div class="reminder-panel__tool-row">
+              <button class="reminder-panel__button" type="button" id="exportReminders">
+                Export JSON
+              </button>
+              <label class="reminder-panel__button reminder-panel__button--secondary">
+                Import JSON
+                <input type="file" id="importReminders" accept="application/json" hidden />
+              </label>
+            </div>
+            <label class="reminder-panel__label" for="syncCode">Sync code</label>
+            <textarea
+              class="reminder-panel__textarea"
+              id="syncCode"
+              rows="3"
+              placeholder="Paste a sync code to restore reminders."
+            ></textarea>
+            <div class="reminder-panel__tool-row">
+              <button class="reminder-panel__button" type="button" id="copySyncCode">
+                Copy code
+              </button>
+              <button
+                class="reminder-panel__button reminder-panel__button--secondary"
+                type="button"
+                id="applySyncCode"
+              >
+                Apply code
+              </button>
+            </div>
+            <p class="reminder-panel__backup" id="backupStatus"></p>
+          </div>
+        </aside>
+      </div>
 
       <footer class="app__footer">
         <p>Hijri dates are calculated using the Islamic calendar locale in your browser.</p>
       </footer>
     </div>
+
+    <div class="reminder-modal" id="reminderModal" aria-hidden="true">
+      <div class="reminder-modal__backdrop" data-reminder-close></div>
+      <div
+        class="reminder-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reminderModalTitle"
+      >
+        <div class="reminder-modal__header">
+          <h2 id="reminderModalTitle">Reminder</h2>
+          <button
+            class="reminder-modal__icon-button"
+            type="button"
+            aria-label="Close reminder editor"
+            data-reminder-close
+          >
+            ✕
+          </button>
+        </div>
+        <p class="reminder-modal__subtitle" id="reminderModalSubtitle"></p>
+        <label class="reminder-modal__label" for="reminderInput">Reminder details</label>
+        <textarea
+          id="reminderInput"
+          class="reminder-modal__input"
+          rows="4"
+          placeholder="Add your reminder..."
+        ></textarea>
+        <div class="reminder-modal__row">
+          <label class="reminder-modal__label" for="reminderPriority">Priority</label>
+          <select id="reminderPriority" class="reminder-modal__select">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="reminder-modal__row">
+          <label class="reminder-modal__label" for="reminderRecurrence">Recurrence</label>
+          <select id="reminderRecurrence" class="reminder-modal__select">
+            <option value="none" selected>Does not repeat</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <p class="reminder-modal__error" id="reminderModalError" aria-live="polite"></p>
+        <p class="reminder-modal__hint" id="reminderModalHint">
+          Tip: Press Ctrl/Cmd + Enter to save quickly.
+        </p>
+        <div class="reminder-modal__actions">
+          <button class="reminder-modal__delete" type="button" id="reminderDelete">
+            Delete reminder
+          </button>
+          <div class="reminder-modal__actions-right">
+            <button class="reminder-modal__button" type="button" data-reminder-close>
+              Cancel
+            </button>
+            <button
+              class="reminder-modal__button reminder-modal__button--primary"
+              type="button"
+              id="reminderSave"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app__live-region" id="appLiveRegion" aria-live="polite"></div>
 
     <script src="app.js"></script>
   </body>
