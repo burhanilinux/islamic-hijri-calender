@@ -21,6 +21,7 @@ const todayHijri = document.getElementById("todayHijri");
 const todayGregorian = document.getElementById("todayGregorian");
 const calendarGrid = document.getElementById("calendarGrid");
 const appContainer = document.querySelector(".app");
+
 const reminderModal = document.getElementById("reminderModal");
 const reminderModalTitle = document.getElementById("reminderModalTitle");
 const reminderModalSubtitle = document.getElementById("reminderModalSubtitle");
@@ -31,6 +32,7 @@ const reminderRecurrence = document.getElementById("reminderRecurrence");
 const reminderSave = document.getElementById("reminderSave");
 const reminderDelete = document.getElementById("reminderDelete");
 const reminderCloseButtons = reminderModal.querySelectorAll("[data-reminder-close]");
+
 const reminderSearch = document.getElementById("reminderSearch");
 const reminderFilter = document.getElementById("reminderFilter");
 const reminderList = document.getElementById("reminderList");
@@ -40,14 +42,17 @@ const syncCodeInput = document.getElementById("syncCode");
 const copySyncCode = document.getElementById("copySyncCode");
 const applySyncCode = document.getElementById("applySyncCode");
 const backupStatus = document.getElementById("backupStatus");
+
 const prevMonthButton = document.getElementById("prevMonth");
 const nextMonthButton = document.getElementById("nextMonth");
 const shortcutHelp = document.getElementById("shortcutHelp");
 const shortcutPopover = document.getElementById("shortcutPopover");
 const liveRegion = document.getElementById("appLiveRegion");
 const primaryDateButtons = document.querySelectorAll("[data-primary-date]");
+
 const remindersKey = "hijri-reminders-v1";
 const backupKey = "hijri-reminders-backup-v1";
+
 let activeReminderContext = null;
 let lastFocusedElement = null;
 let currentMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -130,11 +135,19 @@ const announce = (message) => {
   }, 50);
 };
 
-const encodeSyncCode = (data) =>
-  window.btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+const encodeSyncCode = (data) => {
+  const jsonString = JSON.stringify(data);
+  const bytes = new TextEncoder().encode(jsonString);
+  const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+  return window.btoa(binString);
+};
 
-const decodeSyncCode = (code) =>
-  JSON.parse(decodeURIComponent(escape(window.atob(code))));
+const decodeSyncCode = (code) => {
+  const binString = window.atob(code);
+  const bytes = Uint8Array.from(binString, (char) => char.charCodeAt(0));
+  const jsonString = new TextDecoder().decode(bytes);
+  return JSON.parse(jsonString);
+};
 
 const applyReminderData = (data, message) => {
   reminders = normalizeReminderData(data);
@@ -206,11 +219,13 @@ const getRemindersForDate = (date) => {
       }
     });
   });
-  return direct.map((item, index) => ({
-    ...item,
-    sourceDateKey: dateKey,
-    sourceIndex: index,
-  })).concat(recurring);
+  return direct
+    .map((item, index) => ({
+      ...item,
+      sourceDateKey: dateKey,
+      sourceIndex: index,
+    }))
+    .concat(recurring);
 };
 
 const updateReminderList = (list, reminders, onEdit) => {
@@ -222,7 +237,6 @@ const updateReminderList = (list, reminders, onEdit) => {
     list.appendChild(empty);
     return;
   }
-
   reminders.forEach((reminder, index) => {
     const item = document.createElement("button");
     item.type = "button";
@@ -275,116 +289,22 @@ const showReminderError = (message) => {
   reminderModalError.textContent = message;
 };
 
-const buildCalendar = () => {
-  const currentMonth = currentMonthDate.getMonth();
-  const currentYear = currentMonthDate.getFullYear();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-
-  monthTitle.textContent = `${monthFormatter.format(currentMonthDate)} — Hijri dates`;
-
-  const todayHijriParts = formatHijriParts(today);
-  todayHijri.textContent = `${todayHijriParts.day} ${todayHijriParts.month} ${todayHijriParts.year}`;
-  todayGregorian.textContent = gregorianFormatter.format(today);
-
-  const startWeekday = firstDayOfMonth.getDay();
-  const totalDays = lastDayOfMonth.getDate();
-
-  calendarGrid.innerHTML = "";
-
-  for (let i = 0; i < startWeekday; i += 1) {
-    const emptyCell = document.createElement("div");
-    emptyCell.className = "calendar__cell calendar__cell--empty";
-    calendarGrid.appendChild(emptyCell);
-  }
-
-  for (let day = 1; day <= totalDays; day += 1) {
-    const date = new Date(currentYear, currentMonth, day);
-    const hijriParts = formatHijriParts(date);
-    const dateKey = toDateKey(date);
-
-    const cell = document.createElement("div");
-    cell.className = "calendar__cell calendar__cell--interactive";
-    cell.setAttribute("role", "button");
-    cell.setAttribute("tabindex", "0");
-    cell.setAttribute(
-      "aria-label",
-      `Add reminder for ${gregorianFormatter.format(date)}`
-    );
-
-    if (date.toDateString() === today.toDateString()) {
-      cell.classList.add("calendar__cell--today");
-    }
-
-    const monthLabel = document.createElement("span");
-    monthLabel.className = "calendar__month";
-    monthLabel.textContent = hijriParts.month;
-
-    const hijriDay = document.createElement("span");
-    hijriDay.className = "calendar__hijri";
-    hijriDay.textContent = `${hijriParts.day} ${hijriParts.year}`;
-
-    const gregorianDay = document.createElement("span");
-    gregorianDay.className = "calendar__gregorian";
-    gregorianDay.textContent = gregorianFormatter.format(date);
-
-    const remindersList = document.createElement("div");
-    remindersList.className = "calendar__reminders";
-    const refreshList = () => {
-      const remindersForDate = getRemindersForDate(date);
-      updateReminderList(remindersList, remindersForDate, (reminder, index) => {
-        openReminderModal({
-          dateKey: reminder.sourceDateKey,
-          index: reminder.sourceIndex ?? index,
-          text: reminder.text,
-          priority: reminder.priority,
-          recurrence: reminder.recurrence,
-          subtitle: `Editing reminder for ${gregorianFormatter.format(date)}`,
-          onRefresh: refreshList,
-        });
+const getOccurrencesInRange = (startDate, endDate) => {
+  const occurrences = [];
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    const dayReminders = getRemindersForDate(current);
+    dayReminders.forEach((reminder) => {
+      occurrences.push({
+        occurrenceDate: new Date(current),
+        reminder,
+        sourceDateKey: reminder.sourceDateKey,
+        sourceIndex: reminder.sourceIndex,
       });
-    };
-
-    refreshList();
-
-    const addReminder = () => {
-      openReminderModal({
-        dateKey,
-        index: null,
-        text: "",
-        priority: "medium",
-        recurrence: "none",
-        subtitle: `Add reminder for ${gregorianFormatter.format(date)}`,
-        onRefresh: refreshList,
-      });
-    };
-
-    cell.addEventListener("click", addReminder);
-    cell.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        addReminder();
-      }
     });
-
-    const highlightLabel = getHighlightLabel(hijriParts);
-    if (highlightLabel) {
-      cell.classList.add("calendar__cell--highlight");
-    }
-
-    cell.append(monthLabel, hijriDay, gregorianDay);
-    if (highlightLabel) {
-      const highlightBadge = document.createElement("span");
-      highlightBadge.className = "calendar__highlight-badge";
-      highlightBadge.textContent = highlightLabel;
-      cell.appendChild(highlightBadge);
-    }
-    cell.appendChild(remindersList);
-    calendarGrid.appendChild(cell);
-
+    current.setDate(current.getDate() + 1);
   }
-
-  buildReminderPanel();
+  return occurrences;
 };
 
 const buildReminderPanel = () => {
@@ -437,8 +357,8 @@ const buildReminderPanel = () => {
   }
 
   displayItems.sort((a, b) => a.occurrenceDate - b.occurrenceDate);
-
   reminderList.innerHTML = "";
+
   if (displayItems.length === 0) {
     const empty = document.createElement("p");
     empty.className = "reminder-panel__empty";
@@ -495,22 +415,116 @@ const buildReminderPanel = () => {
   });
 };
 
-const getOccurrencesInRange = (startDate, endDate) => {
-  const occurrences = [];
-  const current = new Date(startDate);
-  while (current <= endDate) {
-    const dayReminders = getRemindersForDate(current);
-    dayReminders.forEach((reminder) => {
-      occurrences.push({
-        occurrenceDate: new Date(current),
-        reminder,
-        sourceDateKey: reminder.sourceDateKey,
-        sourceIndex: reminder.sourceIndex,
-      });
-    });
-    current.setDate(current.getDate() + 1);
+const buildCalendar = () => {
+  const currentMonth = currentMonthDate.getMonth();
+  const currentYear = currentMonthDate.getFullYear();
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+
+  monthTitle.textContent = `${monthFormatter.format(currentMonthDate)} Hijri dates`;
+  const todayHijriParts = formatHijriParts(today);
+  todayHijri.textContent = `${todayHijriParts.day} ${todayHijriParts.month} ${todayHijriParts.year}`;
+  todayGregorian.textContent = gregorianFormatter.format(today);
+
+  const startWeekday = firstDayOfMonth.getDay();
+  const totalDays = lastDayOfMonth.getDate();
+  calendarGrid.innerHTML = "";
+
+  for (let i = 0; i < startWeekday; i += 1) {
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "calendar__cell calendar__cell--empty";
+    calendarGrid.appendChild(emptyCell);
   }
-  return occurrences;
+
+  for (let day = 1; day <= totalDays; day += 1) {
+    const date = new Date(currentYear, currentMonth, day);
+    const hijriParts = formatHijriParts(date);
+    const dateKey = toDateKey(date);
+
+    const cell = document.createElement("div");
+    cell.className = "calendar__cell calendar__cell--interactive";
+    cell.setAttribute("role", "button");
+    cell.setAttribute("tabindex", "0");
+    cell.setAttribute(
+      "aria-label",
+      `Add reminder for ${gregorianFormatter.format(date)}`
+    );
+
+    if (date.toDateString() === today.toDateString()) {
+      cell.classList.add("calendar__cell--today");
+    }
+
+    const monthLabel = document.createElement("span");
+    monthLabel.className = "calendar__month";
+    monthLabel.textContent = hijriParts.month;
+
+    const hijriDay = document.createElement("span");
+    hijriDay.className = "calendar__hijri";
+    hijriDay.textContent = `${hijriParts.day} ${hijriParts.year}`;
+
+    const gregorianDay = document.createElement("span");
+    gregorianDay.className = "calendar__gregorian";
+    gregorianDay.textContent = gregorianFormatter.format(date);
+
+    const remindersList = document.createElement("div");
+    remindersList.className = "calendar__reminders";
+
+    const refreshList = () => {
+      const remindersForDate = getRemindersForDate(date);
+      updateReminderList(remindersList, remindersForDate, (reminder, index) => {
+        openReminderModal({
+          dateKey: reminder.sourceDateKey,
+          index: reminder.sourceIndex ?? index,
+          text: reminder.text,
+          priority: reminder.priority,
+          recurrence: reminder.recurrence,
+          subtitle: `Editing reminder for ${gregorianFormatter.format(date)}`,
+          onRefresh: refreshList,
+        });
+      });
+    };
+
+    refreshList();
+
+    const addReminder = () => {
+      openReminderModal({
+        dateKey,
+        index: null,
+        text: "",
+        priority: "medium",
+        recurrence: "none",
+        subtitle: `Add reminder for ${gregorianFormatter.format(date)}`,
+        onRefresh: refreshList,
+      });
+    };
+
+    cell.addEventListener("click", addReminder);
+    cell.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        addReminder();
+      }
+    });
+
+    const highlightLabel = getHighlightLabel(hijriParts);
+    if (highlightLabel) {
+      cell.classList.add("calendar__cell--highlight");
+    }
+
+    cell.append(monthLabel, hijriDay, gregorianDay);
+
+    if (highlightLabel) {
+      const highlightBadge = document.createElement("span");
+      highlightBadge.className = "calendar__highlight-badge";
+      highlightBadge.textContent = highlightLabel;
+      cell.appendChild(highlightBadge);
+    }
+
+    cell.appendChild(remindersList);
+    calendarGrid.appendChild(cell);
+  }
+
+  buildReminderPanel();
 };
 
 reminderCloseButtons.forEach((button) => {
@@ -533,11 +547,13 @@ reminderSave.addEventListener("click", () => {
     priority: reminderPriority.value,
     recurrence: reminderRecurrence.value,
   });
+
   if (index === null) {
     currentReminders.push(nextReminder);
   } else {
     currentReminders[index] = nextReminder;
   }
+
   reminders[dateKey] = currentReminders;
   saveReminders(reminders);
   saveBackup();
@@ -559,11 +575,13 @@ reminderDelete.addEventListener("click", () => {
   const { dateKey, index, onRefresh } = activeReminderContext;
   const currentReminders = reminders[dateKey] ? [...reminders[dateKey]] : [];
   currentReminders.splice(index, 1);
+
   if (currentReminders.length === 0) {
     delete reminders[dateKey];
   } else {
     reminders[dateKey] = currentReminders;
   }
+
   saveReminders(reminders);
   saveBackup();
   onRefresh?.();
@@ -572,9 +590,15 @@ reminderDelete.addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && reminderModal.classList.contains("is-visible")) {
-    closeReminderModal();
+  if (event.key === "Escape") {
+    if (shortcutPopover.classList.contains("is-visible")) {
+      shortcutPopover.classList.remove("is-visible");
+    }
+    if (reminderModal.classList.contains("is-visible")) {
+      closeReminderModal();
+    }
   }
+
   if (
     (event.metaKey || event.ctrlKey) &&
     event.key === "Enter" &&
@@ -597,6 +621,7 @@ reminderModal.addEventListener("keydown", (event) => {
   }
   const first = focusableArray[0];
   const last = focusableArray[focusableArray.length - 1];
+
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault();
     last.focus();

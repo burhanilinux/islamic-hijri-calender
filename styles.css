@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   color-scheme: light;
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
@@ -8,10 +14,6 @@
   --card: #ffffff;
   --border: #e5e7eb;
   --background: #f8fafc;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 body {
@@ -585,6 +587,8 @@ body.modal-open {
   border-radius: 999px;
   width: 32px;
   height: 32px;
+  font-size: 1.25rem;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -700,11 +704,9 @@ body.modal-open {
   .app__layout {
     grid-template-columns: 1fr;
   }
-
   .reminder-panel {
     position: static;
   }
-
   .calendar__grid {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
   }
@@ -714,7 +716,6 @@ body.modal-open {
   .calendar__grid {
     grid-template-columns: 1fr;
   }
-
   .calendar {
     display: none;
   }
